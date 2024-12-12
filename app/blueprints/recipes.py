@@ -46,69 +46,118 @@ def format_ingredients(ingredients):
 
 @recipes.route('/recipes/<int:recipe_id>')
 def view_recipe(recipe_id):
-    """View details of a single recipe and fetch nutritional information."""
     connection = get_db()
-    user_id = session.get('user_id')  # Get logged-in user ID
 
     # Fetch the recipe details
-    query = """
-        SELECT recipes.*, 
-               users.username,
-               EXISTS(
-                   SELECT 1 FROM favorites 
-                   WHERE favorites.recipe_id = recipes.id AND favorites.user_id = %s
-               ) AS is_favorite
-        FROM recipes
-        JOIN users ON recipes.user_id = users.id
-        WHERE recipes.id = %s
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, (user_id, recipe_id))
-        recipe = cursor.fetchone()
+    try:
+        recipe_query = """
+            SELECT recipes.*, users.username
+            FROM recipes
+            JOIN users ON recipes.user_id = users.id
+            WHERE recipes.id = %s
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(recipe_query, (recipe_id,))
+            recipe = cursor.fetchone()
+        print("Recipe Details:", recipe)
+    except Exception as e:
+        print(f"Error fetching recipe details: {e}")
+        flash("An error occurred while fetching the recipe.", "danger")
+        return redirect(url_for('recipes.list_recipes'))
 
     if not recipe:
         flash("Recipe not found.", "danger")
         return redirect(url_for('recipes.list_recipes'))
 
-    # Extract and format ingredients for the API
-    ingredients_list = recipe['ingredients'].split(',')  # Split comma-separated string
-    formatted_ingredients = format_ingredients(ingredients_list)
-    print("Formatted Ingredients:", formatted_ingredients)
-
-    # Payload for the Edamam API
-    payload = {
-        "title": recipe['title'],
-        "ingr": formatted_ingredients
-    }
+    # Check if nutritional data exists for the recipe
+    try:
+        nutrition_query = """
+            SELECT calories, protein, carbohydrates, fat
+            FROM recipe_nutrition
+            WHERE recipe_id = %s
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(nutrition_query, (recipe_id,))
+            nutrition_data = cursor.fetchone()
+        print("Nutrition Data from DB:", nutrition_data)
+    except Exception as e:
+        print(f"Error fetching nutritional data: {e}")
+        nutrition_data = None
 
     # Edamam API configuration
     APP_ID = 'fee31b76'  # Replace with your app ID
     APP_KEY = '9e2335761d271c35e04b500915aa60ea'  # Replace with your app key
     API_URL = 'https://api.edamam.com/api/nutrition-details'
 
-    # Payload for API
-    payload = {
-        "title": recipe['title'],
-        "ingr": formatted_ingredients
-    }
+    # Fetch from API if not in DB
+    if not nutrition_data:
+        print(f"Nutritional data not found for recipe {recipe_id}. Fetching from API...")
+        try:
+            formatted_ingredients = [i.strip() for i in recipe['ingredients'].split(',')]
+            print("Formatted Ingredients:", formatted_ingredients)
 
-    # Fetch nutritional data
-    try:
-        response = requests.post(
-            f'{API_URL}?app_id={APP_ID}&app_key={APP_KEY}',
-            json=payload
-        )
-        if response.status_code == 200:
-            nutrition_data = response.json()
-            print("Nutrition Data:", nutrition_data)
-        else:
-            print(f"API Error {response.status_code}: {response.text}")
-            nutrition_data = None  # Handle API errors gracefully
-    except Exception as e:
-        print(f"Error fetching nutritional data: {e}")
-        nutrition_data = None
+            # Fetch data from Edamam API
+            payload = {
+                "title": recipe['title'],
+                "ingr": formatted_ingredients
+            }
+            response = requests.post(
+                f'{API_URL}?app_id={APP_ID}&app_key={APP_KEY}',
+                json=payload
+            )
+
+            # Debugging logs
+            print("API Status Code:", response.status_code)
+            print("API Response:", response.text)
+
+            if response.status_code == 200:
+                api_data = response.json()
+                nutrition_data = {
+                    'calories': api_data.get('calories'),
+                    'protein': api_data['totalNutrients'].get('PROCNT', {}).get('quantity', 0),
+                    'carbohydrates': api_data['totalNutrients'].get('CHOCDF', {}).get('quantity', 0),
+                    'fat': api_data['totalNutrients'].get('FAT', {}).get('quantity', 0),
+                }
+                save_nutrition_data(recipe_id, nutrition_data)
+            else:
+                print(f"API Error {response.status_code}: {response.text}")
+                flash("Failed to fetch nutritional information from the API.", "warning")
+                nutrition_data = None
+        except Exception as e:
+            print(f"Error fetching or saving nutritional data: {e}")
+            flash("An error occurred while fetching nutritional information.", "danger")
+            nutrition_data = None
 
     return render_template('recipes/view.html', recipe=recipe, nutrition_data=nutrition_data)
+
+def save_nutrition_data(recipe_id, nutrition_data):
+    print("Saving Nutrition Data:", nutrition_data)
+
+    """Save nutritional data into the database."""
+    connection = get_db()
+    query = """
+        INSERT INTO recipe_nutrition (recipe_id, calories, protein, carbohydrates, fat)
+        VALUES (%s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            calories = VALUES(calories),
+            protein = VALUES(protein),
+            carbohydrates = VALUES(carbohydrates),
+            fat = VALUES(fat),
+            updated_at = CURRENT_TIMESTAMP
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, (
+                recipe_id,
+                nutrition_data.get('calories'),
+                nutrition_data.get('protein'),
+                nutrition_data.get('carbohydrates'),
+                nutrition_data.get('fat')
+            ))
+        connection.commit()
+    except Exception as e:
+        print(f"Error saving nutritional data: {e}")
+        connection.rollback()
 
 @recipes.route('/recipes/add', methods=['GET', 'POST'])
 def add_recipe():
