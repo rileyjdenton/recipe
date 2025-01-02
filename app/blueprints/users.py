@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from passlib.context import CryptContext
-from werkzeug.security import generate_password_hash, check_password_hash
+import passlib.exc
+from werkzeug.security import check_password_hash
 from app.db_connect import get_db
 
 pwd_context = CryptContext(
