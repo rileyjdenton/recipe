@@ -181,3 +181,13 @@
     background-color: #f2f2f2;
     font-weight: bold;
 }
+
+.recipe-details a {
+    color: #0c793e;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.recipe-details a:hover {
+    text-decoration: underline;
+}

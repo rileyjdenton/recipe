@@ -8,7 +8,9 @@ app.secret_key = 'your-secret'  # Replace with an environment variable
 from app.blueprints.users import users
 from app.blueprints.recipes import recipes
 from app.blueprints.favorites import favorites
+from app.blueprints.admin import admin_bp
 
+app.register_blueprint(admin_bp)
 app.register_blueprint(users)
 app.register_blueprint(recipes)
 app.register_blueprint(favorites)

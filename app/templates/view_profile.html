@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Profile of {{ user['username'] }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='CSS/profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='CSS/recipes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+
+    {% if user['first_name'] or user['last_name'] %}
+        <h1>Name: {{ user['first_name'] or '' }} {{ user['last_name'] or '' }}</h1>
+        <h3>Username: {{ user['username'] }}</h3>
+    {% else %}
+        <h1>Username: {{ user['username'] }}</h1>
+    {% endif %}
+
+    <!-- Profile Section -->
+    {% if is_current_user %}
+        <!-- View Profile Mode -->
+        {% if not editing %}
+        <div class="profile-view">
+            <p><strong>First Name:</strong> {{ user.get('first_name', 'Not set') }}</p>
+            <p><strong>Last Name:</strong> {{ user.get('last_name', 'Not set') }}</p>
+            <p><strong>Email:</strong> {{ user.get('email', 'Not set') }}</p>
+            <p><strong>Bio:</strong> {{ user.get('bio', 'Not set') }}</p>
+            <button onclick="location.href='{{ url_for('users.view_profile', username=user['username'], edit=True) }}'">Edit Profile</button>
+        </div>
+        {% endif %}
+
+        <!-- Edit Profile Mode -->
+        {% if editing %}
+        <form method="post" action="{{ url_for('users.view_profile', username=user['username']) }}">
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" value="{{ user.get('first_name', '') }}" placeholder="Enter your first name">
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" value="{{ user.get('last_name', '') }}" placeholder="Enter your last name">
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ user.get('email', '') }}" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="bio">Bio:</label>
+                <textarea id="bio" name="bio" placeholder="Tell us about yourself...">{{ user.get('bio', '') }}</textarea>
+            </div>
+            <button type="submit">Save Changes</button>
+            <button type="button" onclick="location.href='{{ url_for('users.view_profile', username=user['username']) }}'">Cancel</button>
+        </form>
+        {% endif %}
+    {% endif %}
+</div>
+
+<!-- Recipes Section -->
+<div class="recipes-container">
+    <h2>Recipes by {{ user['username'] }}</h2>
+    <div class="search-bar-container">
+        <form method="get" action="{{ url_for('users.view_profile', username=user['username']) }}" class="search-bar-form">
+            <input type="text" name="query" placeholder="Search recipes..." value="{{ query }}" required>
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    {% if recipes %}
+        <div class="recipes-list">
+            {% for recipe in recipes %}
+            <div class="recipe-card">
+                {% if recipe['image_path'] %}
+                    <img src="{{ url_for('static', filename=recipe['image_path'].replace('static/', '')) }}"
+                         alt="{{ recipe['title'] }}"
+                         class="recipe-image">
+                {% endif %}
+                <h3>
+                    <a href="{{ url_for('recipes.view_recipe', recipe_id=recipe['id']) }}">{{ recipe['title'] }}</a>
+                </h3>
+                <p class="description">{{ recipe['description'] }}</p>
+                <p class="meal-type">{{ recipe['meal_type'] }}</p>
+                <p class="category">{{ recipe['category'] }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No recipes found{% if query %} matching "{{ query }}"{% endif %}.</p>
+    {% endif %}
+</div>
+{% endblock %}

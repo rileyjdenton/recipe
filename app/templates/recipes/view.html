@@ -16,7 +16,10 @@
     </div>
 
     <div class="recipe-details">
-        <p><strong>Author:</strong> {{ recipe['username'] }}</p>
+        <p>
+            <strong>Author:</strong>
+            <a href="{{ url_for('users.view_profile', username=recipe['username']) }}">{{ recipe['username'] }}</a>
+        </p>
         <p><strong>Description:</strong> {{ recipe.description }}</p>
         <p><strong>Meal Type:</strong> {{ recipe['meal_type'] }}</p>
         <p><strong>Category:</strong> {{ recipe['category'] }}</p>

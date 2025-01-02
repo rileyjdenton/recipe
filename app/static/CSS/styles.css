@@ -18,11 +18,24 @@ body {
 
 /* Header & Navigation */
 header {
-    background-color: #87CEFA; /* Light blue color */
+    background: linear-gradient(-45deg, #0c793e, #013919, #0c793e, #013919); /* Greater contrast between greens */
+    background-size: 400% 400%;
+    animation: gradientShift 20s ease infinite; /* Slower animation */
     color: white;
     padding: 10px 20px;
-    border-bottom: 4px solid #4682B4; /* Steel blue border */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .navbar {
