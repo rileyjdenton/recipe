@@ -1,10 +1,7 @@
-from flask import render_template
+from flask import redirect, url_for
 from . import app
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return redirect(url_for('recipes.list_recipes'))
 
-@app.route('/recipes')
-def recipes():
-    return render_template('recipes.html')

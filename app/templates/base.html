@@ -14,7 +14,6 @@
                 <a href="{{ url_for('index') }}">🍴 RecipeBook</a>
             </div>
             <ul class="nav-links">
-                <li><a href="{{ url_for('index') }}">Home</a></li>
                 <li><a href="{{ url_for('recipes.list_recipes') }}">Recipes</a></li>
                 {% if 'user_id' in session %}
                     <li><a href="{{ url_for('favorites.list_favorites') }}">Favorites</a></li>
