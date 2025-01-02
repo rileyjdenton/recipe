@@ -45,8 +45,14 @@
             <h3><a href="{{ url_for('recipes.view_recipe', recipe_id=recipe['id']) }}">{{ recipe['title'] }}</a></h3>
             <p class="description">{{ recipe['description'] }}</p>
             <p class="meal-type">{{ recipe['meal_type'] }}</p>
-            <p class="category">{{ recipe['category'] }}</p>
-            <p class="author">By: <strong>{{ recipe['username'] }}</strong></p>
+            {% if recipe['category'] and recipe['category'] != 'None' and recipe['category']|trim %}
+                <p class="category">{{ recipe['category'] }}</p>
+            {% endif %}
+            <p>Category debug: {{ recipe['category'] }}</p>
+            <p>
+                <strong>Author:</strong>
+                <a href="{{ url_for('users.view_profile', username=recipe['username']) }}">{{ recipe['username'] }}</a>
+            </p>
             {% if 'user_id' in session %}
             <form method="post" class="favorite-form">
                 <button type="submit" class="favorite-btn" data-favorited="{{ recipe['is_favorite'] }}">
