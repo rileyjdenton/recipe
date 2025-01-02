@@ -82,30 +82,32 @@ def login():
             user = cursor.fetchone()
 
         if user:
-            # Check if the password matches the new Passlib Scrypt hash
-            if pwd_context.verify(password, user['password']):
-                session['user_id'] = user['id']
-                session['username'] = user['username']
-                flash("Login successful!", "success")
-                return redirect(url_for('index'))
-            # Check if the password matches the legacy Werkzeug hash
-            elif check_password_hash(user['password'], password):
-                # Re-hash the password using Passlib
-                new_hashed_password = pwd_context.hash(password)
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "UPDATE users SET password = %s WHERE id = %s",
-                        (new_hashed_password, user['id']),
-                    )
-                    connection.commit()
-                session['user_id'] = user['id']
-                session['username'] = user['username']
-                flash("Login successful! Your password has been updated to a more secure format.", "success")
-                return redirect(url_for('index'))
-            else:
-                flash("Invalid credentials. Please try again.", "danger")
-        else:
-            flash("Invalid credentials. Please try again.", "danger")
+            hashed_password = user['password']
+
+            # Attempt to verify using Passlib's CryptContext
+            try:
+                if pwd_context.verify(password, hashed_password):
+                    session['user_id'] = user['id']
+                    session['username'] = user['username']
+                    flash("Login successful!", "success")
+                    return redirect(url_for('index'))
+            except passlib.exc.UnknownHashError:
+                # Fallback to Werkzeug for legacy hashes
+                if check_password_hash(hashed_password, password):
+                    # Re-hash the password with the new Passlib format
+                    new_hashed_password = pwd_context.hash(password)
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            "UPDATE users SET password = %s WHERE id = %s",
+                            (new_hashed_password, user['id']),
+                        )
+                        connection.commit()
+                    session['user_id'] = user['id']
+                    session['username'] = user['username']
+                    flash("Login successful! Your password has been updated to a more secure format.", "success")
+                    return redirect(url_for('index'))
+
+        flash("Invalid credentials. Please try again.", "danger")
 
     return render_template("login.html")
 
