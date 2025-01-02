@@ -18,23 +18,27 @@ body {
 
 /* Header & Navigation */
 header {
-    background-color: #ffa500; /* Recipe-themed orange */
+    background-color: #87CEFA; /* Light blue color */
     color: white;
     padding: 10px 20px;
-    border-bottom: 4px solid #e07a00; /* Darker orange border */
+    border-bottom: 4px solid #4682B4; /* Steel blue border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
 
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .navbar .logo a {
     text-decoration: none;
     font-size: 1.8rem;
     font-weight: bold;
-    color: white;
+    color: #ffffff; /* White for contrast */
+    letter-spacing: 1px; /* Slight spacing for a modern look */
 }
 
 .navbar ul {
@@ -43,17 +47,43 @@ header {
     gap: 20px;
 }
 
+.navbar ul li {
+    position: relative; /* Allows dropdown menus if needed in the future */
+}
+
 .navbar ul li a {
     text-decoration: none;
-    color: white;
+    color: #ffffff; /* White text for links */
     font-size: 1rem;
-    padding: 5px 10px;
-    transition: background-color 0.3s ease;
+    font-weight: 500;
+    padding: 8px 15px;
+    transition: all 0.3s ease-in-out;
+    border-radius: 5px; /* Smooth edges */
 }
 
 .navbar ul li a:hover {
-    background-color: #e07a00;
-    border-radius: 5px;
+    background-color: #4682B4; /* Steel blue on hover */
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Adds a hover effect */
+}
+
+/* Navbar responsiveness for mobile */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .navbar ul {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .navbar ul li a {
+        width: 100%; /* Full-width links on small screens */
+        text-align: left;
+    }
 }
 
 /* Main Content */
