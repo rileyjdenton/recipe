@@ -348,33 +348,34 @@ def search_recipes():
 
 @recipes.route('/recipes/filter')
 def filter_recipes():
-    """Filter recipes by meal type."""
+    """Filter recipes by meal type and/or username."""
     meal_type = request.args.get('meal_type', '').strip()
+    username = request.args.get('username', '').strip()
     connection = get_db()
 
+    # Base query to retrieve recipes
+    query = """
+        SELECT recipes.id, recipes.title, recipes.description, recipes.image_path,
+               recipes.meal_type, recipes.category, users.username
+        FROM recipes
+        JOIN users ON recipes.user_id = users.id
+        WHERE 1=1
+    """
+    params = []
+
+    # Add meal_type filter if provided
     if meal_type:
-        query = """
-            SELECT recipes.id, recipes.title, recipes.description, recipes.image_path,
-                   recipes.meal_type, recipes.category, users.username
-            FROM recipes
-            JOIN users ON recipes.user_id = users.id
-            WHERE recipes.meal_type = %s
-        """
-        with connection.cursor() as cursor:
-            cursor.execute(query, (meal_type,))
-            recipes = cursor.fetchall()
-    else:
-        # If no filter, return all recipes
-        query = """
-            SELECT recipes.id, recipes.title, recipes.description, recipes.image_path,
-                   recipes.meal_type, recipes.category, users.username
-            FROM recipes
-            JOIN users ON recipes.user_id = users.id
-        """
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            recipes = cursor.fetchall()
+        query += " AND recipes.meal_type = %s"
+        params.append(meal_type)
+
+    # Add username filter if provided
+    if username:
+        query += " AND users.username = %s"
+        params.append(username)
+
+    # Execute the query with the parameters
+    with connection.cursor() as cursor:
+        cursor.execute(query, tuple(params))
+        recipes = cursor.fetchall()
 
     return render_template('recipes/list.html', recipes=recipes)
-
-

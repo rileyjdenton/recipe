@@ -1,4 +1,4 @@
-from flask import Flask, g
+from flask import g
 from .app_factory import create_app
 from .db_connect import close_db, get_db
 

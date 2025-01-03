@@ -22,17 +22,34 @@
     {% if 'user_id' in session %}
     <div class="filter-add-container">
         <form method="get" action="{{ url_for('recipes.filter_recipes') }}" class="filter-form">
+            <!-- Meal Type Filter -->
             <label for="meal_type">Filter by Meal Type:</label>
-            <select id="meal_type" name="meal_type" onchange="this.form.submit()">
+            <select id="meal_type" name="meal_type">
                 <option value="" {% if not request.args.get('meal_type') %}selected{% endif %}>All</option>
                 <option value="Breakfast" {% if request.args.get('meal_type') == 'Breakfast' %}selected{% endif %}>Breakfast</option>
                 <option value="Lunch" {% if request.args.get('meal_type') == 'Lunch' %}selected{% endif %}>Lunch</option>
                 <option value="Dinner" {% if request.args.get('meal_type') == 'Dinner' %}selected{% endif %}>Dinner</option>
                 <option value="Snack" {% if request.args.get('meal_type') == 'Snack' %}selected{% endif %}>Snack</option>
             </select>
+
+            <!-- Username Filter -->
+            <label for="username">Filter by User:</label>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Enter username"
+                value="{{ request.args.get('username', '') }}"
+            />
+
+            <!-- Submit Button -->
+            <button type="submit">Filter</button>
         </form>
+
+        <!-- Add Recipe Button -->
         <a href="{{ url_for('recipes.add_recipe') }}" class="btn add-recipe-btn">Add Recipe</a>
     </div>
+
 
     {% endif %}
 
