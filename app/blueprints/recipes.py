@@ -159,6 +159,7 @@ def save_nutrition_data(recipe_id, nutrition_data):
         print(f"Error saving nutritional data: {e}")
         connection.rollback()
 
+
 @recipes.route('/recipes/add', methods=['GET', 'POST'])
 def add_recipe():
     if 'user_id' not in session:
@@ -177,10 +178,20 @@ def add_recipe():
         # Handle image upload
         image_file = request.files.get('image')
         image_path = None
+
         if image_file and allowed_file(image_file.filename):
             filename = secure_filename(image_file.filename)
-            image_path = os.path.join('static/uploads', filename).replace("\\", "/")
-            image_file.save(os.path.join(current_app.root_path, image_path))
+            uploads_folder = os.path.join(current_app.root_path, 'static/uploads')
+
+            # Ensure the uploads folder exists
+            os.makedirs(uploads_folder, exist_ok=True)
+
+            # Save the file
+            image_path = os.path.join(uploads_folder, filename)
+            image_file.save(image_path)
+
+            # Update image path for database (relative to static folder)
+            image_path = f'static/uploads/{filename}'
 
         # Insert recipe into database
         connection = get_db()
